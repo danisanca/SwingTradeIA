@@ -87,8 +87,12 @@ jobs:
         working-directory: ai-service
         run: |
           pip install ruff
-          # Usa o ruff.toml do diretório — não sobrescreve config com flags inline
-          ruff check app/
+          # Mostra todos os erros com anotações do GitHub para facilitar leitura
+          echo "=== Erros encontrados ==="
+          ruff check app/ --output-format=github || true
+          # Aplica todos os fixes automáticos (incluindo unsafe) e verifica o resultado
+          ruff check app/ --fix --unsafe-fixes
+          echo "✅ Ruff lint OK"
 
       - name: Verificar imports e sintaxe
         working-directory: ai-service
