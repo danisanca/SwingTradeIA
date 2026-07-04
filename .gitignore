@@ -1,0 +1,39 @@
+# Logs & build artifacts
+*.log
+**/bin/
+**/obj/
+**/.angular/
+**/dist/
+**/node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database volumes
+postgres_data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.venv/
+venv/
+
+# Model weights (large files)
+ai-service/app/models/*.pth
+modelo/models/
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
