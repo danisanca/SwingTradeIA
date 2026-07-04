@@ -1,19 +1,18 @@
 # Configuração do Ruff para o projeto SwingTradeIA
 # Docs: https://docs.astral.sh/ruff/configuration/
 
-[tool.ruff]
 line-length = 120
 target-version = "py311"
 
-[tool.ruff.lint]
+[lint]
 # Regras habilitadas: erros, warnings, pyflakes, isort
 select = ["E", "W", "F", "I"]
 
 ignore = [
     "E501",   # line too long — controlado pelo line-length acima
-    "E402",   # module level import not at top of file — necessário no dqn_agent.py (import condicional)
+    "E402",   # module level import not at top — necessário para imports condicionais (try/except PyTorch)
     "F841",   # local variable assigned but never used — falsos positivos em try/except
 ]
 
-[tool.ruff.lint.isort]
+[lint.isort]
 known-first-party = ["app"]
