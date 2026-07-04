@@ -1,0 +1,395 @@
+<div class="home-layout">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HEADER
+  ═══════════════════════════════════════════════════════════ -->
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="brand-icon">📈</span>
+      <div class="brand-text">
+        <span class="brand-title">SwingTradeIA</span>
+        <span class="brand-subtitle">B3 · Análise Técnica + IA</span>
+      </div>
+    </div>
+    <div class="header-info">
+      <div class="market-badge">
+        <span class="dot dot-green"></span>
+        <span>B3 Bovespa</span>
+      </div>
+      <span class="header-date">{{ today | date:'EEEE, d MMM yyyy':'':'pt-BR' | titlecase }}</span>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MAIN CONTENT
+  ═══════════════════════════════════════════════════════════ -->
+  <main class="main-content">
+
+    <!-- ── SIDEBAR: Lista de Ações ────────────────────────────── -->
+    <aside class="sidebar">
+      <!-- Search -->
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input
+          id="stock-search"
+          type="text"
+          class="search-input"
+          placeholder="Buscar ação..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+        />
+      </div>
+
+      <!-- List Header -->
+      <div class="list-header">
+        <span>Ação</span>
+        <span>Preço</span>
+        <span>%Dia</span>
+      </div>
+
+      <!-- Loading State -->
+      @if (loadingQuotes) {
+        <div class="stock-list">
+          @for (i of [1,2,3,4,5,6,7,8]; track i) {
+            <div class="stock-item skeleton-item">
+              <div class="skeleton" style="height:14px; width:50px; margin-bottom:4px;"></div>
+              <div class="skeleton" style="height:10px; width:90px;"></div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Stock List -->
+      @if (!loadingQuotes) {
+        <div class="stock-list" id="stock-list">
+          @for (quote of filteredQuotes; track trackByTicker($index, quote)) {
+            <div
+              class="stock-item"
+              [class.active]="selectedTicker === quote.ticker"
+              (click)="selectStock(quote.ticker)"
+              [id]="'stock-' + quote.ticker"
+            >
+              <div class="stock-info">
+                <div class="stock-left">
+                  @if (analysis && selectedTicker === quote.ticker && analysis.finalSignal) {
+                    <span class="signal-dot signal-dot-{{ getSignalClass(analysis.finalSignal.signal) }}"></span>
+                  }
+                  <div>
+                    <span class="stock-ticker">{{ quote.ticker }}</span>
+                    <span class="stock-name">{{ quote.name ?? quote.ticker }}</span>
+                  </div>
+                </div>
+                <div class="stock-right">
+                  <span class="stock-price font-mono">
+                    {{ quote.price != null ? 'R$' + formatPrice(quote.price) : '—' }}
+                  </span>
+                  <span class="stock-change font-mono"
+                    [class.positive]="(quote.changePercent ?? 0) > 0"
+                    [class.negative]="(quote.changePercent ?? 0) < 0">
+                    {{ formatPercent(quote.changePercent) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (filteredQuotes.length === 0) {
+            <div class="empty-state">
+              <span>Nenhuma ação encontrada</span>
+            </div>
+          }
+        </div>
+      }
+    </aside>
+
+    <!-- ── MAIN PANEL: Gráfico + Estatísticas ─────────────────── -->
+    <section class="content-panel">
+
+      <div class="no-selection" [class.hidden]="!!selectedTicker">
+        <div class="no-selection-icon">📊</div>
+        <h2>Selecione uma ação</h2>
+        <p>Escolha uma ação na lista ao lado para visualizar o gráfico e análise técnica.</p>
+      </div>
+
+      <div class="active-panel" [class.hidden]="!selectedTicker">
+        <!-- ── Chart Header ───────────────────────────────────────── -->
+        <div class="chart-header">
+          <div class="chart-title">
+            <div>
+              <h1 class="ticker-label">{{ selectedTicker }}</h1>
+              <span class="company-label">{{ getSelectedQuote()?.name ?? '' }}</span>
+            </div>
+            @if (getSelectedQuote(); as q) {
+              <div class="price-summary">
+                <span class="price-current font-mono">R$ {{ formatPrice(q.price) }}</span>
+                <span class="price-change font-mono"
+                  [class.positive]="(q.changePercent ?? 0) > 0"
+                  [class.negative]="(q.changePercent ?? 0) < 0">
+                  {{ formatChange(q.change) }} ({{ formatPercent(q.changePercent) }})
+                </span>
+              </div>
+            }
+          </div>
+
+          <!-- Period Selector -->
+          <div class="period-selector" id="period-selector">
+            @for (opt of periodOptions; track opt.value) {
+              <button
+                class="period-btn"
+                [class.active]="selectedPeriod === opt.value"
+                (click)="changePeriod(opt.value)"
+                [id]="'period-' + opt.value"
+              >
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- ── Candlestick Chart ──────────────────────────────────── -->
+        <div class="chart-wrapper">
+          @if (loadingChart) {
+            <div class="chart-loading">
+              <div class="spinner"></div>
+              <span>Carregando dados...</span>
+            </div>
+          }
+          @if (chartError) {
+            <div class="chart-error">
+              <span>⚠️ {{ chartError }}</span>
+            </div>
+          }
+          <div #chartContainer class="chart-canvas" [class.hidden]="loadingChart || !!chartError"></div>
+        </div>
+
+        <!-- ── Statistics Panel ──────────────────────────────────── -->
+        <div class="stats-panel" id="stats-panel">
+
+          <!-- Loading Analysis -->
+          @if (loadingAnalysis) {
+            <div class="analysis-loading">
+              <div class="spinner"></div>
+              <span>Calculando indicadores...</span>
+            </div>
+          }
+
+          @if (!loadingAnalysis && analysis) {
+            <!-- ── Main Signal ──────────────────────────────────────── -->
+            <div class="signal-card signal-{{ getSignalClass(analysis.finalSignal.signal) }}" id="signal-card">
+              <div class="signal-main">
+                <div class="signal-icon">{{ getSignalIcon(analysis.finalSignal.signal) }}</div>
+                <div class="signal-content">
+                  <span class="signal-label">{{ getSignalLabel(analysis.finalSignal.signal) }}</span>
+                  <span class="signal-source">
+                    {{ analysis.finalSignal.source === 'dqn' ? '🤖 Modelo DQN' : '📊 Análise Técnica' }}
+                  </span>
+                </div>
+              </div>
+              <div class="signal-confidence">
+                <span class="confidence-value">{{ analysis.finalSignal.confidence | number:'1.0-0' }}%</span>
+                <span class="confidence-label">Confiança</span>
+              </div>
+            </div>
+
+            <!-- ── Indicators Grid ──────────────────────────────────── -->
+            <div class="indicators-grid">
+
+              <!-- Price Data -->
+              <div class="indicator-card" id="price-data-card">
+                <div class="indicator-header">
+                  <span class="indicator-title">📈 Dados do Dia</span>
+                </div>
+                <div class="price-grid">
+                  <div class="price-item">
+                    <span class="pi-label">Abertura</span>
+                    <span class="pi-value font-mono">R$ {{ formatPrice(analysis.indicators.price.open) }}</span>
+                  </div>
+                  <div class="price-item">
+                    <span class="pi-label">Máxima</span>
+                    <span class="pi-value font-mono positive">R$ {{ formatPrice(analysis.indicators.price.high) }}</span>
+                  </div>
+                  <div class="price-item">
+                    <span class="pi-label">Mínima</span>
+                    <span class="pi-value font-mono negative">R$ {{ formatPrice(analysis.indicators.price.low) }}</span>
+                  </div>
+                  <div class="price-item">
+                    <span class="pi-label">Fechamento</span>
+                    <span class="pi-value font-mono">R$ {{ formatPrice(analysis.indicators.price.current) }}</span>
+                  </div>
+                  <div class="price-item">
+                    <span class="pi-label">Máx 52s</span>
+                    <span class="pi-value font-mono">R$ {{ formatPrice(analysis.indicators.price.high52w) }}</span>
+                  </div>
+                  <div class="price-item">
+                    <span class="pi-label">Mín 52s</span>
+                    <span class="pi-value font-mono">R$ {{ formatPrice(analysis.indicators.price.low52w) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RSI -->
+              <div class="indicator-card" id="rsi-card">
+                <div class="indicator-header">
+                  <span class="indicator-title">⚡ RSI (14)</span>
+                  <span class="indicator-badge" [class]="'badge badge-' + getSignalClass(analysis.indicators.rsi.signal === 'sobrecomprado' ? 'SELL' : analysis.indicators.rsi.signal === 'sobrevendido' ? 'BUY' : 'HOLD')">
+                    {{ analysis.indicators.rsi.signal }}
+                  </span>
+                </div>
+                <div class="rsi-value font-mono">{{ analysis.indicators.rsi.value | number:'1.1-1' }}</div>
+                <div class="rsi-bar-track">
+                  <div class="rsi-bar" [style.width.%]="getRsiBarWidth(analysis.indicators.rsi.value)" [style.background]="getRsiColor(analysis.indicators.rsi.value)"></div>
+                  <div class="rsi-markers">
+                    <span class="rsi-marker" style="left:30%">30</span>
+                    <span class="rsi-marker" style="left:70%">70</span>
+                  </div>
+                </div>
+                <p class="indicator-interpretation">{{ analysis.indicators.rsi.interpretation }}</p>
+              </div>
+
+              <!-- MACD -->
+              <div class="indicator-card" id="macd-card">
+                <div class="indicator-header">
+                  <span class="indicator-title">📉 MACD (12/26/9)</span>
+                  <span class="indicator-badge badge"
+                    [class.badge-buy]="analysis.indicators.macdData.trend === 'alta'"
+                    [class.badge-sell]="analysis.indicators.macdData.trend === 'baixa'"
+                    [class.badge-hold]="analysis.indicators.macdData.trend === 'neutro'">
+                    {{ analysis.indicators.macdData.trend }}
+                  </span>
+                </div>
+                <div class="macd-values">
+                  <div class="macd-row">
+                    <span class="macd-label">MACD</span>
+                    <span class="macd-val font-mono">{{ analysis.indicators.macdData.macd | number:'1.4-4' }}</span>
+                  </div>
+                  <div class="macd-row">
+                    <span class="macd-label">Sinal</span>
+                    <span class="macd-val font-mono">{{ analysis.indicators.macdData.signal | number:'1.4-4' }}</span>
+                  </div>
+                  <div class="macd-row">
+                    <span class="macd-label">Histograma</span>
+                    <span class="macd-val font-mono"
+                      [class.positive]="(analysis.indicators.macdData.histogram ?? 0) > 0"
+                      [class.negative]="(analysis.indicators.macdData.histogram ?? 0) < 0">
+                      {{ analysis.indicators.macdData.histogram | number:'1.4-4' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bollinger Bands -->
+              <div class="indicator-card" id="bollinger-card">
+                <div class="indicator-header">
+                  <span class="indicator-title">🎯 Bollinger (20, 2)</span>
+                </div>
+                <div class="bollinger-values">
+                  <div class="bb-row">
+                    <span class="bb-label">Banda Superior</span>
+                    <span class="bb-val font-mono negative">R$ {{ formatPrice(analysis.indicators.bollingerBands.upper) }}</span>
+                  </div>
+                  <div class="bb-row bb-middle">
+                    <span class="bb-label">Média (MM20)</span>
+                    <span class="bb-val font-mono">R$ {{ formatPrice(analysis.indicators.bollingerBands.middle) }}</span>
+                  </div>
+                  <div class="bb-row">
+                    <span class="bb-label">Banda Inferior</span>
+                    <span class="bb-val font-mono positive">R$ {{ formatPrice(analysis.indicators.bollingerBands.lower) }}</span>
+                  </div>
+                </div>
+                <p class="indicator-interpretation">{{ analysis.indicators.bollingerBands.interpretation }}</p>
+              </div>
+
+              <!-- Moving Averages -->
+              <div class="indicator-card" id="ma-card">
+                <div class="indicator-header">
+                  <span class="indicator-title">📊 Médias Móveis</span>
+                  <span class="indicator-badge badge"
+                    [class.badge-buy]="analysis.indicators.movingAverages.crossSignal.includes('alta') || analysis.indicators.movingAverages.crossSignal.includes('golden')"
+                    [class.badge-sell]="analysis.indicators.movingAverages.crossSignal.includes('baixa') || analysis.indicators.movingAverages.crossSignal.includes('death')"
+                    [class.badge-hold]="!analysis.indicators.movingAverages.crossSignal.includes('alta') && !analysis.indicators.movingAverages.crossSignal.includes('baixa') && !analysis.indicators.movingAverages.crossSignal.includes('golden') && !analysis.indicators.movingAverages.crossSignal.includes('death')">
+                    {{ analysis.indicators.movingAverages.crossSignal }}
+                  </span>
+                </div>
+                <div class="ma-values">
+                  <div class="ma-row">
+                    <span class="ma-label">MM9</span>
+                    <span class="ma-val font-mono">R$ {{ formatPrice(analysis.indicators.movingAverages.ma9) }}</span>
+                  </div>
+                  <div class="ma-row">
+                    <span class="ma-label">MM21</span>
+                    <span class="ma-val font-mono">R$ {{ formatPrice(analysis.indicators.movingAverages.ma21) }}</span>
+                  </div>
+                  @if (analysis.indicators.movingAverages.ma50) {
+                    <div class="ma-row">
+                      <span class="ma-label">MM50</span>
+                      <span class="ma-val font-mono">R$ {{ formatPrice(analysis.indicators.movingAverages.ma50) }}</span>
+                    </div>
+                  }
+                  @if (analysis.indicators.movingAverages.ma200) {
+                    <div class="ma-row">
+                      <span class="ma-label">MM200</span>
+                      <span class="ma-val font-mono">R$ {{ formatPrice(analysis.indicators.movingAverages.ma200) }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Volume -->
+              <div class="indicator-card" id="volume-card">
+                <div class="indicator-header">
+                  <span class="indicator-title">📦 Volume</span>
+                  <span class="indicator-badge badge"
+                    [class.badge-buy]="analysis.indicators.volume.signal === 'acima da média'"
+                    [class.badge-sell]="analysis.indicators.volume.signal === 'abaixo da média'"
+                    [class.badge-hold]="analysis.indicators.volume.signal === 'normal'">
+                    {{ analysis.indicators.volume.signal }}
+                  </span>
+                </div>
+                <div class="volume-main font-mono">{{ formatVolume(analysis.indicators.volume.current) }}</div>
+                <div class="volume-details">
+                  <span class="vol-label">Média 20 dias:</span>
+                  <span class="vol-val font-mono">{{ formatVolume(analysis.indicators.volume.ma20) }}</span>
+                </div>
+                @if (analysis.indicators.volume.ratio) {
+                  <div class="volume-ratio-bar">
+                    <div class="ratio-fill"
+                      [style.width.%]="Math.min(100, (analysis.indicators.volume.ratio / 3) * 100)"
+                      [style.background]="analysis.indicators.volume.ratio > 1.5 ? 'var(--signal-buy)' : analysis.indicators.volume.ratio < 0.5 ? 'var(--signal-sell)' : 'var(--accent-blue)'">
+                    </div>
+                  </div>
+                  <p class="indicator-interpretation">Ratio: {{ analysis.indicators.volume.ratio | number:'1.1-1' }}x da média</p>
+                }
+              </div>
+
+            </div>
+
+            <!-- ── DQN Status ──────────────────────────────────────── -->
+            @if (analysis.dqn) {
+              <div class="dqn-status" id="dqn-status">
+                @if (analysis.dqn.available) {
+                  <div class="dqn-available">
+                    <span class="dqn-icon">🤖</span>
+                    <span>Modelo DQN ativo — Confiança: {{ analysis.dqn.confidence }}%</span>
+                  </div>
+                } @else {
+                  <div class="dqn-unavailable">
+                    <span class="dqn-icon">🔮</span>
+                    <span>Modelo DQN não treinado — usando análise técnica. ({{ analysis.dqn.reason }})</span>
+                  </div>
+                }
+              </div>
+            }
+          }
+
+          @if (!loadingAnalysis && !analysis) {
+            <div class="analysis-error">
+              <span>⚠️ Não foi possível carregar a análise. Verifique se o backend está disponível.</span>
+            </div>
+          }
+
+        </div>
+      </div>
+
+    </section>
+  </main>
+</div>

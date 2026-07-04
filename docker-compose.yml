@@ -1,0 +1,103 @@
+# ============================================================
+# docker-compose.yml — SwingTradeIA
+# ============================================================
+# Serviços:
+#   postgres    → PostgreSQL 16        (porta 5432)
+#   ai-service  → Python FastAPI DQN  (porta 8000, interno)
+#   backend     → C# .NET 8 Web API   (porta 5000)
+#   frontend    → Angular + Nginx     (porta 4200)
+# ============================================================
+
+services:
+
+  # ─── Banco de Dados ──────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: swingtrade_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-swingtrade_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-swingtrade_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-swingtrade_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-swingtrade_user} -d ${POSTGRES_DB:-swingtrade_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - swingtrade_net
+
+  # ─── AI Service (Python FastAPI + DQN) ──────────────────────────────────────
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: swingtrade_ai
+    restart: unless-stopped
+    environment:
+      PYTHONUNBUFFERED: 1
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    networks:
+      - swingtrade_net
+
+  # ─── Backend (C# .NET 8 Web API) ─────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: swingtrade_backend
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-swingtrade_db};Username=${POSTGRES_USER:-swingtrade_user};Password=${POSTGRES_PASSWORD:-swingtrade_pass}"
+      AiService__Url: http://ai-service:8000
+    ports:
+      - "5000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - swingtrade_net
+
+  # ─── Frontend (Angular + Nginx) ───────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        API_URL: ${API_URL:-http://localhost:5000}
+    container_name: swingtrade_frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - swingtrade_net
+
+# ─── Volumes ──────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+
+# ─── Networks ─────────────────────────────────────────────────────────────────
+networks:
+  swingtrade_net:
+    driver: bridge

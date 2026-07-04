@@ -1,0 +1,280 @@
+/* ===================================================
+   SwingTradeIA — Global Styles
+   Design System: Dark Finance Theme
+   =================================================== */
+
+/* ── Fonts ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── CSS Variables (Design Tokens) ─────────────────── */
+:root {
+  /* Colors */
+  --bg-primary: #0a0d14;
+  --bg-secondary: #0f1320;
+  --bg-card: #141928;
+  --bg-card-hover: #1a2035;
+  --bg-elevated: #1e2640;
+
+  --border-color: rgba(255, 255, 255, 0.07);
+  --border-color-active: rgba(99, 179, 237, 0.4);
+
+  --text-primary: #e8eaf0;
+  --text-secondary: #8892a4;
+  --text-muted: #4a5568;
+  --text-accent: #63b3ed;
+
+  /* Brand / Accent */
+  --accent-blue: #4299e1;
+  --accent-blue-light: #63b3ed;
+  --accent-blue-glow: rgba(66, 153, 225, 0.15);
+
+  /* Signal colors */
+  --signal-buy: #48bb78;
+  --signal-buy-glow: rgba(72, 187, 120, 0.2);
+  --signal-buy-text: #9ae6b4;
+
+  --signal-sell: #fc8181;
+  --signal-sell-glow: rgba(252, 129, 129, 0.2);
+  --signal-sell-text: #feb2b2;
+
+  --signal-hold: #f6e05e;
+  --signal-hold-glow: rgba(246, 224, 94, 0.15);
+  --signal-hold-text: #faf089;
+
+  /* Chart Colors */
+  --candle-up: #48bb78;
+  --candle-down: #fc8181;
+
+  /* Gradients */
+  --gradient-card: linear-gradient(135deg, #141928 0%, #1a2035 100%);
+  --gradient-accent: linear-gradient(135deg, #4299e1 0%, #667eea 100%);
+  --gradient-buy: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  --gradient-sell: linear-gradient(135deg, #fc8181 0%, #e53e3e 100%);
+  --gradient-header: linear-gradient(180deg, rgba(10, 13, 20, 0.98) 0%, rgba(10, 13, 20, 0.85) 100%);
+
+  /* Shadows */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow-blue: 0 0 20px rgba(66, 153, 225, 0.2);
+  --shadow-glow-buy: 0 0 20px rgba(72, 187, 120, 0.25);
+  --shadow-glow-sell: 0 0 20px rgba(252, 129, 129, 0.25);
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* Layout */
+  --header-height: 56px;
+  --sidebar-width: 320px;
+}
+
+/* ── Reset & Base ────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar ────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ── Typography ───────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ── Utility Classes ──────────────────────────────────── */
+.text-buy   { color: var(--signal-buy-text); }
+.text-sell  { color: var(--signal-sell-text); }
+.text-hold  { color: var(--signal-hold-text); }
+.text-muted { color: var(--text-secondary); }
+.text-accent { color: var(--text-accent); }
+
+.bg-buy  { background: var(--signal-buy-glow); }
+.bg-sell { background: var(--signal-sell-glow); }
+.bg-hold { background: var(--signal-hold-glow); }
+
+/* ── Animations ───────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 8px var(--accent-blue-glow); }
+  50%       { box-shadow: 0 0 20px var(--accent-blue-glow), 0 0 40px var(--accent-blue-glow); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+/* ── Loading Skeleton ─────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-elevated) 50%, var(--bg-card) 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Spinner ──────────────────────────────────────────── */
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Card ─────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+
+  &:hover {
+    border-color: var(--border-color-active);
+  }
+}
+
+/* ── Button ───────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: 6px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none;
+  white-space: nowrap;
+
+  &.btn-primary {
+    background: var(--gradient-accent);
+    color: white;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-glow-blue);
+    }
+  }
+
+  &.btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+
+    &:hover {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border-color: var(--border-color-active);
+    }
+  }
+
+  &.btn-active {
+    background: var(--accent-blue-glow);
+    color: var(--text-accent);
+    border-color: var(--border-color-active);
+  }
+}
+
+/* ── Badge ────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+
+  &.badge-buy {
+    background: var(--signal-buy-glow);
+    color: var(--signal-buy-text);
+    border: 1px solid rgba(72, 187, 120, 0.3);
+  }
+
+  &.badge-sell {
+    background: var(--signal-sell-glow);
+    color: var(--signal-sell-text);
+    border: 1px solid rgba(252, 129, 129, 0.3);
+  }
+
+  &.badge-hold {
+    background: var(--signal-hold-glow);
+    color: var(--signal-hold-text);
+    border: 1px solid rgba(246, 224, 94, 0.3);
+  }
+}
