@@ -1,9 +1,5 @@
 # SwingTradeIA 📈
 
-> **Projeto 3 do meu Roadmap de IA** — Plataforma de suporte à decisão para Swing Trade em ações brasileiras (B3) com agente de Aprendizado por Reforço (DQN — Deep Q-Network).
-
----
-
 ## 📌 Sobre o projeto
 
 O **SwingTradeIA** é um projeto que desenvolvi para colocar em prática conceitos de **Inteligência Artificial aplicada ao mercado financeiro**. A ideia central é combinar análise técnica clássica com um agente de RL (Reinforcement Learning) treinado com dados históricos da B3, gerando recomendações de **Comprar**, **Manter** ou **Vender** para ações brasileiras.
