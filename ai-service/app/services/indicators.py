@@ -1,8 +1,7 @@
-import pandas as pd
-import numpy as np
-import ta
-from typing import Optional
 import logging
+
+import pandas as pd
+import ta
 
 logger = logging.getLogger(__name__)
 

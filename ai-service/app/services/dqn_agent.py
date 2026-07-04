@@ -1,8 +1,9 @@
+import logging
 import os
+
 import numpy as np
 import pandas as pd
-import logging
-from typing import Optional
+import ta
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ ACTION_MAP = {0: "SELL", 1: "HOLD", 2: "BUY"}
 WEIGHTS_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "dqn_weights.pth")
 
 
-def build_state(df: pd.DataFrame, window: int = 10) -> Optional[np.ndarray]:
+def build_state(df: pd.DataFrame, window: int = 10) -> np.ndarray | None:
     """
     Constrói o vetor de estado para o agente DQN a partir dos últimos N dias.
     
@@ -57,7 +58,6 @@ def build_state(df: pd.DataFrame, window: int = 10) -> Optional[np.ndarray]:
         return None
 
     try:
-        import ta
         close = df["Close"]
         volume = df["Volume"]
         rsi = ta.momentum.RSIIndicator(close=close, window=14).rsi()

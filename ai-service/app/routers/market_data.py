@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Query
-from app.services.data_fetcher import fetch_history, fetch_quote, B3_STOCKS
-from typing import Optional
 import logging
+
+from fastapi import APIRouter, HTTPException, Query
+
+from app.services.data_fetcher import B3_STOCKS, fetch_history, fetch_quote
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

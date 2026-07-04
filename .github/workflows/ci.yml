@@ -87,7 +87,8 @@ jobs:
         working-directory: ai-service
         run: |
           pip install ruff
-          ruff check app/ --select E,W,F --ignore E501
+          # Usa o ruff.toml do diretório — não sobrescreve config com flags inline
+          ruff check app/
 
       - name: Verificar imports e sintaxe
         working-directory: ai-service

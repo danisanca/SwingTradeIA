@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException
-from app.services.data_fetcher import fetch_history, B3_STOCKS
-from app.services.indicators import calculate_indicators, generate_composite_signal
-from app.services.dqn_agent import dqn_recommend
 import logging
+
+from fastapi import APIRouter, HTTPException
+
+from app.services.data_fetcher import B3_STOCKS, fetch_history
+from app.services.dqn_agent import dqn_recommend
+from app.services.indicators import calculate_indicators, generate_composite_signal
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
