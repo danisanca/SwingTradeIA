@@ -50,11 +50,11 @@ jobs:
           dotnet-version: "8.0.x"
 
       - name: Restore packages
-        working-directory: backend
+        working-directory: backend/SwingTradeIA.Api
         run: dotnet restore
 
       - name: Build
-        working-directory: backend
+        working-directory: backend/SwingTradeIA.Api
         run: dotnet build --no-restore --configuration Release
 
   # ─────────────────────────────────────────────
