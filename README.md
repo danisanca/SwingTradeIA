@@ -24,10 +24,13 @@ O sistema **não executa ordens automáticas** — ele funciona como uma ferrame
 
 ## 🖼️ Screenshots
 
+### 🖼️ Ações e Grafico
 <img width="1913" height="597" alt="Image" src="https://github.com/user-attachments/assets/eaf51d6c-b387-4a86-8ce9-4db27cca2048" />
 
+### 🖼️ Indicadores
 <img width="1581" height="329" alt="Image" src="https://github.com/user-attachments/assets/07cf092b-fc31-4aeb-b0d7-515a1fb1dfff" />
 
+### 🖼️ Nivél de Confiança do Sinal
 <img width="1580" height="839" alt="Image" src="https://github.com/user-attachments/assets/bf1ae776-7473-4e37-8064-eb85b1d081c8" />
 
 ---
