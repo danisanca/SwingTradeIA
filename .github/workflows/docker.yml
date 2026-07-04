@@ -1,0 +1,74 @@
+name: Docker — Build & Compose Validation
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - "docker-compose.yml"
+      - "frontend/Dockerfile"
+      - "backend/Dockerfile"
+      - "ai-service/Dockerfile"
+      - "infrastructure/**"
+  pull_request:
+    branches: [master, main]
+    paths:
+      - "docker-compose.yml"
+      - "frontend/Dockerfile"
+      - "backend/Dockerfile"
+      - "ai-service/Dockerfile"
+      - "infrastructure/**"
+  workflow_dispatch: # permite rodar manualmente pelo GitHub
+
+jobs:
+  docker-validate:
+    name: 🐳 Validar Docker Compose
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Criar arquivo .env a partir do exemplo
+        run: cp .env.example .env
+
+      - name: Validar sintaxe do docker-compose.yml
+        run: docker compose config --quiet
+
+      - name: Build de todas as imagens
+        run: docker compose build --no-cache
+
+      - name: Subir serviços e aguardar health checks
+        run: |
+          docker compose up -d
+          echo "⏳ Aguardando serviços iniciarem..."
+          sleep 30
+
+      - name: Verificar containers rodando
+        run: docker compose ps
+
+      - name: Smoke test — Backend health
+        run: |
+          curl --retry 5 --retry-delay 5 --retry-connrefused \
+            -f http://localhost:5000/swagger/index.html || \
+            (echo "❌ Backend não respondeu" && docker compose logs backend && exit 1)
+
+      - name: Smoke test — AI Service health
+        run: |
+          curl --retry 5 --retry-delay 5 --retry-connrefused \
+            -f http://localhost:8000/health || \
+            curl -f http://localhost:8000/docs || \
+            (echo "❌ AI Service não respondeu" && docker compose logs ai-service && exit 1)
+
+      - name: Smoke test — Frontend
+        run: |
+          curl --retry 5 --retry-delay 5 --retry-connrefused \
+            -f http://localhost:4200 || \
+            (echo "❌ Frontend não respondeu" && docker compose logs frontend && exit 1)
+
+      - name: Exibir logs em caso de falha
+        if: failure()
+        run: docker compose logs
+
+      - name: Derrubar serviços
+        if: always()
+        run: docker compose down -v
